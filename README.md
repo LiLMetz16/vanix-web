@@ -20,6 +20,7 @@
 - [Team](#team)
 - [Technologies](#technologies)
 - [Languages](#languages)
+- [Installation](#installation)
 - [Appreciation](#appreciation)
 
 <p align="center">
@@ -238,10 +239,18 @@ For business inquiries, collaborations, or custom projects — VANIX is ready to
    <img src="rainbowline (2).png" width="100%" height="7px"/>
 </p>
 
-## 🚀 VANIX Live Demo
+## ⚙️ Installation <a name="installation"></a>
 
-https://www.vanix.space/  
-*(Replace with your real VANIX domain when ready)*
+Open your terminal (CMD / PowerShell / VS Code Terminal) and paste the following commands:
+
+```bash
+1. cd \
+2. git clone https://github.com/LiLMetz16/vanix-web.git
+3. cd vanix-web
+4. code .
+5. npm install
+6. npm run dev
+```
 
 <p align="center">
    <img src="rainbowline (2).png" width="100%" height="7px"/>
