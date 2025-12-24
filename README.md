@@ -244,10 +244,10 @@ For business inquiries, collaborations, or custom projects — VANIX is ready to
 Open your terminal (CMD / PowerShell / VS Code Terminal) and paste the following commands:
 
 ```bash
-1. cd \
-2. git clone https://github.com/LiLMetz16/vanix-web.git
-3. cd vanix-web
-4. code .
+1. git clone https://github.com/LiLMetz16/vanix-web.git
+2. cd Vanix
+3. (in VS CODE) open folder Vanix
+4. Terminal -> New terminal
 5. npm install
 6. npm run dev
 ```
