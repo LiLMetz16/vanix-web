@@ -1,5 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import Navbar from "@/app/components/Navbar";
+
+
+<Navbar />
 
 export const metadata: Metadata = {
   title: "Vanix — Software & Design Studio",

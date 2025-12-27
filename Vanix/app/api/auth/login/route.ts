@@ -1,49 +1,32 @@
+// app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { email, password } = (await req.json()) as {
+      email: string;
+      password: string;
+    };
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Missing email or password" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing email or password" }, { status: 400 });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY! // SELECT с full access
-    );
+    const supabase = createClient();
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .eq("password", password)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: data.id,
-        username: data.username,
-        email: data.email,
-      },
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+
+    // cookies are set by @supabase/ssr through server client
+    return NextResponse.json({ ok: true, userId: data.user?.id ?? null }, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

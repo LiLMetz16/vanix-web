@@ -1,39 +1,59 @@
+// app/api/auth/register/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    const { username, email, password } = await req.json();
+    const { email, password, username } = (await req.json()) as {
+      email: string;
+      password: string;
+      username: string;
+    };
 
-    if (!username || !email || !password) {
-      return NextResponse.json(
-        { error: "Missing fields" },
-        { status: 400 }
-      );
+    if (!email || !password || !username) {
+      return NextResponse.json({ error: "Missing email, password or username" }, { status: 400 });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY! // INSERT → service key
-    );
+    const supabase = createClient();
 
-    const { error } = await supabase.from("users").insert([
-      {
-        username,
-        email,
-        password,
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username, // also stored in user_metadata
+          role: "user",
+        },
       },
-    ]);
+    });
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const userId = data.user?.id;
+    if (userId) {
+      // Create/Upsert profile row (recommended source of truth)
+      const { error: profErr } = await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          username,
+          role: "user",
+        },
+        { onConflict: "id" }
+      );
+
+      if (profErr) {
+        // Auth created but profile insert failed
+        return NextResponse.json(
+          { ok: true, userId, warning: "Registered, but profile creation failed", detail: profErr.message },
+          { status: 200 }
+        );
+      }
+    }
+
+    return NextResponse.json({ ok: true, userId: userId ?? null }, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

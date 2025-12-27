@@ -1,296 +1,566 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { readUser } from "@/lib/authClient";
+import type { StoredUser } from "@/lib/types/auth";
 
 type Mode = "login" | "register";
+type Tab = "profile" | "orders" | "dashboard" | "users";
 
-export default function AccountPage() {
-  const [accountOpen, setAccountOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [mode, setMode] = useState<Mode>("login");
+type AdminUserRow = {
+  id: string;
+  email: string | null;
+  username: string | null;
+  role: "client" | "admin";
+};
 
-  return (
-    <div className="min-h-screen bg-animated-gradient">
-      {/* NAVBAR */}
-      <header className="w-full pt-4">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="relative rounded-2xl bg-white/80 backdrop-blur shadow-lg border border-white/60">
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-indigo-500 via-pink-500 to-emerald-400 opacity-80" />
+function mapSupabaseRegisterError(msg: string) {
+  const m = msg.toLowerCase();
 
-            <div className="flex items-center justify-between gap-6 px-5 py-3">
-              {/* Logo */}
-              <div className="flex items-center gap-3">
-                <Link href="/" className="flex items-center gap-3 group">
-                  <Image
-                    src="/logo.png"
-                    alt="Vanix Logo"
-                    width={40}
-                    height={40}
-                    className="object-contain rounded-xl transition-transform duration-200 group-hover:scale-105"
-                  />
-                  <div className="flex flex-col leading-tight">
-                    <span className="font-extrabold text-xl text-gray-900">
-                      Vanix
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Anton Kabakov & Viktor Kanev
-                    </span>
-                  </div>
-                </Link>
-              </div>
+  // Supabase често връща "User already registered"
+  if (m.includes("already registered") || m.includes("already exists")) {
+    return "Вече има акаунт с този email.";
+  }
 
-              {/* Navigation */}
-              <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-700">
-                <Link href="/" className="group relative">
-                  <span className="transition-colors duration-200 group-hover:text-indigo-600">
-                    Home
-                  </span>
-                  <span className="absolute left-0 -bottom-1 h-[2px] w-0 rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 transition-all duration-200 group-hover:w-full" />
-                </Link>
+  // Ако имаш unique constraint на public.users.email и някак си стигнеш до него
+  if (m.includes("duplicate") || m.includes("unique constraint") || m.includes("already in use")) {
+    return "Вече има акаунт с този email.";
+  }
 
-                <Link href="/shop" className="group relative">
-                  <span className="transition-colors duration-200 group-hover:text-indigo-600">
-                    Shop
-                  </span>
-                  <span className="absolute left-0 -bottom-1 h-[2px] w-0 rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 transition-all duration-200 group-hover:w-full" />
-                </Link>
-
-                <Link href="/contact" className="group relative">
-                  <span className="transition-colors duration-200 group-hover:text-indigo-600">
-                    Contact Us
-                  </span>
-                  <span className="absolute left-0 -bottom-1 h-[2px] w-0 rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 transition-all duration-200 group-hover:w-full" />
-                </Link>
-              </nav>
-
-              {/* Icons */}
-              <div className="flex items-center gap-3">
-                {/* Account */}
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setAccountOpen(!accountOpen);
-                      setCartOpen(false);
-                    }}
-                    className="w-10 h-10 rounded-full border border-gray-300 flex justify-center items-center bg-white/90 hover:bg-gray-100 text-lg transition hover:scale-105"
-                  >
-                    👤
-                  </button>
-
-                  {accountOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white border rounded-xl shadow-xl z-30 text-gray-900">
-                      <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-900">
-                        My Account
-                      </button>
-                      <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-900">
-                        Order History
-                      </button>
-                      <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-900">
-                        Log out
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Cart */}
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setCartOpen(!cartOpen);
-                      setAccountOpen(false);
-                    }}
-                    className="w-10 h-10 rounded-full border border-gray-300 flex justify-center items-center bg-white/90 hover:bg-gray-100 text-lg transition hover:scale-105"
-                  >
-                    🛒
-                  </button>
-
-                  {cartOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white border rounded-xl shadow-xl z-30 text-gray-900 text-sm">
-                      <div className="px-4 py-3 border-b font-semibold text-gray-900">
-                        Cart
-                      </div>
-                      <div className="px-4 py-4 text-gray-700 text-sm">
-                        Your cart is empty.
-                      </div>
-                      <div className="px-4 py-2 border-t">
-                        <Link
-                          href="/shop"
-                          className="block text-center text-indigo-600 hover:underline text-sm"
-                        >
-                          Go to shop
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* MAIN CONTENT */}
-      <main className="max-w-5xl mx-auto px-6 pt-10 pb-20">
-        <h1 className="text-3xl font-bold text-white drop-shadow mb-6">
-          My Account
-        </h1>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Login / Register */}
-          <div className="bg-white rounded-2xl shadow p-6 text-gray-900">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">
-              {mode === "login" ? "Login" : "Create account"}
-            </h2>
-
-            <AccountForm mode={mode} />
-
-            <button
-              onClick={() =>
-                setMode((prev) => (prev === "login" ? "register" : "login"))
-              }
-              className="mt-4 text-sm text-indigo-600 hover:underline"
-            >
-              {mode === "login"
-                ? "Нямате акаунт? Създайте нов."
-                : "Вече имате акаунт? Влезте."}
-            </button>
-          </div>
-
-          {/* Orders / history */}
-          <div className="bg-white rounded-2xl shadow p-6 text-gray-900">
-            <h2 className="text-xl font-bold mb-3 text-gray-900">My Orders</h2>
-            <p className="text-sm text-gray-700 mb-4">
-              Тук по-късно ще показваме реалната история на поръчките и
-              статусите им от SQL базата (pending, in progress, done).
-            </p>
-
-            <div className="border rounded-xl p-4 text-sm text-gray-600">
-              No orders yet. Once you start buying services, your order history
-              will appear here.
-            </div>
-
-            <div className="mt-6">
-              <Link
-                href="/shop"
-                className="text-indigo-600 hover:underline text-sm"
-              >
-                → Go to shop
-              </Link>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+  return msg;
 }
 
-function AccountForm({ mode }: { mode: Mode }) {
+export default function AccountPage() {
+  const router = useRouter();
+  const sp = useSearchParams();
+
+  const [mode, setMode] = useState<Mode>("login");
+  const [user, setUser] = useState<StoredUser | null>(null);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+
+  const [emailVisible, setEmailVisible] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
-  setLoading(true);
-  setError(null);
-  setSuccess(null);
+  // admin stats
+  const [stats, setStats] = useState<{ users: number; orders: number; updatedAt: string } | null>(null);
+  const [statsErr, setStatsErr] = useState<string | null>(null);
 
-  const form = e.currentTarget;
-  const data = new FormData(form);
+  // admin users
+  const [usersList, setUsersList] = useState<AdminUserRow[]>([]);
+  const [usersErr, setUsersErr] = useState<string | null>(null);
+  const [usersLoading, setUsersLoading] = useState(false);
 
-  const body =
-    mode === "register"
-      ? {
-          username: data.get("fullName"),
-          email: data.get("email"),
-          password: data.get("password"),
-        }
-      : {
-          email: data.get("email"),
-          password: data.get("password"),
-        };
+  const isAdmin = user?.role === "admin";
 
-  const endpoint =
-    mode === "login" ? "/api/auth/login" : "/api/auth/register";
+  const tab = useMemo(() => {
+    const t = (sp.get("tab") ?? "profile").toLowerCase();
+    if (t === "orders") return "orders" as const;
+    if (t === "dashboard") return "dashboard" as const;
+    if (t === "users") return "users" as const;
+    return "profile" as const;
+  }, [sp]);
 
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+  useEffect(() => {
+    readUser().then(setUser).catch(() => setUser(null));
+  }, []);
+
+  function setTab(next: Tab) {
+    router.replace(`/account?tab=${next}`);
+  }
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setErr(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      const u = await readUser();
+      setUser(u);
+      router.push("/account");
+    } catch (e: any) {
+      setErr(e?.message ?? "Login failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setErr(null);
+
+    try {
+      const origin = window.location.origin;
+
+      const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: { username: name }, // или name, според твоя state
+    emailRedirectTo: `${origin}/auth/verify`,
+  },
+});
+
+      if (error) {
+        setErr(mapSupabaseRegisterError(error.message));
+        return;
+      }
+
+      // ако email confirmation е включен – ще трябва да потвърдиш
+      setMode("login");
+    } catch (e: any) {
+      setErr(mapSupabaseRegisterError(e?.message ?? "Register failed."));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    setLoading(true);
+    setErr(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      router.replace("/account");
+    } catch (e: any) {
+      setErr(e?.message ?? "Logout failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Admin stats polling (dashboard)
+  useEffect(() => {
+    let t: any;
+
+    const load = async () => {
+      setStatsErr(null);
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        setStatsErr("Missing access token.");
+        return;
+      }
+
+      const res = await fetch("/api/admin/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setStatsErr(json?.error ?? "Failed to load stats.");
+        return;
+      }
+
+      setStats(json);
+    };
+
+    if (user?.role === "admin" && tab === "dashboard") {
+      load();
+      t = setInterval(load, 5000);
+    }
+
+    return () => t && clearInterval(t);
+  }, [user?.role, tab]);
+
+  // Admin users list
+  async function loadUsers() {
+    setUsersLoading(true);
+    setUsersErr(null);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        setUsersErr("Missing access token.");
+        return;
+      }
+
+      const res = await fetch("/api/admin/users", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        setUsersErr(json?.error ?? "Failed to load users.");
+        return;
+      }
+
+      setUsersList(json.users ?? []);
+    } finally {
+      setUsersLoading(false);
+    }
+  }
+
+  async function setUserRole(id: string, role: "client" | "admin") {
+    setUsersErr(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) {
+      setUsersErr("Missing access token.");
+      return;
+    }
+
+    const res = await fetch("/api/admin/users/role", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ id, role }),
     });
 
     const json = await res.json();
-
-    if (!res.ok) throw new Error(json.error || "Something went wrong");
-
-    if (mode === "login") {
-      setSuccess("Успешен вход!");
-    } else {
-      setSuccess("Акаунтът е създаден успешно!");
+    if (!res.ok) {
+      setUsersErr(json?.error ?? "Failed to update role.");
+      return;
     }
 
-    form.reset();
-  } catch (err: any) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
+    // refresh
+    await loadUsers();
   }
-}
+
+  useEffect(() => {
+    if (user?.role === "admin" && tab === "users") {
+      loadUsers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role, tab]);
+
   return (
-    <>
-      <form className="space-y-3" onSubmit={handleSubmit}>
-        {mode === "register" && (
-          <input
-            className="w-full border rounded-xl px-3 py-2 text-sm text-gray-900"
-            placeholder="Full name"
-            name="fullName"
-          />
-        )}
+    <div className="min-h-screen bg-animated-gradient">
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="w-full max-w-2xl">
+          <div className="relative rounded-2xl bg-white/80 backdrop-blur shadow-lg border border-white/60 p-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-semibold text-black">My Account</h1>
 
-        <input
-          className="w-full border rounded-xl px-3 py-2 text-sm text-gray-900"
-          placeholder="Email"
-          type="email"
-          name="email"
-          required
-        />
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  disabled={loading}
+                  className="rounded-xl border border-black/10 bg-white/60 px-3 py-1.5 text-sm hover:bg-white disabled:opacity-60 text-black"
+                >
+                  Logout
+                </button>
+              ) : null}
+            </div>
 
-        <input
-          className="w-full border rounded-xl px-3 py-2 text-sm text-gray-900"
-          placeholder="Password"
-          type="password"
-          name="password"
-          required
-        />
+            {user ? (
+              <>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTab("profile")}
+                    className={`rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-black ${
+                      tab === "profile" ? "bg-white shadow" : "bg-white/60 hover:bg-white"
+                    }`}
+                  >
+                    Profile
+                  </button>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-60"
-        >
-          {loading
-            ? mode === "login"
-              ? "Logging in..."
-              : "Creating account..."
-            : mode === "login"
-            ? "Login"
-            : "Create account"}
-        </button>
-      </form>
+                  <button
+                    type="button"
+                    onClick={() => setTab("orders")}
+                    className={`rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-black ${
+                      tab === "orders" ? "bg-white shadow" : "bg-white/60 hover:bg-white"
+                    }`}
+                  >
+                    Orders
+                  </button>
 
-      {success && (
-        <p className="mt-3 text-sm text-green-600">
-          {success}
-        </p>
-      )}
-      {error && (
-        <p className="mt-2 text-sm text-red-600">
-          ❌ {error}
-        </p>
-      )}
-    </>
+                  {isAdmin && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setTab("dashboard")}
+                        className={`rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-black ${
+                          tab === "dashboard" ? "bg-white shadow" : "bg-white/60 hover:bg-white"
+                        }`}
+                      >
+                        Dashboard
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setTab("users")}
+                        className={`rounded-xl border border-black/10 px-3 py-2 text-sm font-medium text-black ${
+                          tab === "users" ? "bg-white shadow" : "bg-white/60 hover:bg-white"
+                        }`}
+                      >
+                        Users
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <div className="mt-5">
+                  {tab === "profile" && (
+                    <div className="rounded-xl border border-black/10 bg-white/60 p-4 space-y-2 text-sm text-black">
+                      <div>
+                        <span className="font-semibold">Email:</span> {user.email ?? "-"}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Name:</span> {user.name ?? "-"}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Role:</span> {user.role}
+                      </div>
+                    </div>
+                  )}
+
+                  {tab === "orders" && (
+                    <div className="rounded-xl border border-black/10 bg-white/60 p-4 text-black">
+                      <div className="text-sm font-semibold">Orders</div>
+                      <div className="text-sm opacity-70 mt-1">
+                        Тук ще показваш реалните поръчки (като имаш таблица/данни).
+                      </div>
+                    </div>
+                  )}
+
+                  {tab === "dashboard" && (
+                    <div className="rounded-xl border border-black/10 bg-white/60 p-4 text-black">
+                      {!isAdmin ? (
+                        <div className="text-sm">Forbidden</div>
+                      ) : (
+                        <>
+                          <div className="text-sm font-semibold">Admin Dashboard (live)</div>
+                          <div className="text-xs opacity-70 mt-1">Auto refresh: 5s</div>
+
+                          {statsErr && (
+                            <div className="mt-3 rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                              {statsErr}
+                            </div>
+                          )}
+
+                          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="rounded-xl border border-black/10 bg-white/70 p-3">
+                              <div className="text-xs opacity-70">Users</div>
+                              <div className="text-2xl font-semibold">{stats?.users ?? "—"}</div>
+                            </div>
+
+                            <div className="rounded-xl border border-black/10 bg-white/70 p-3">
+                              <div className="text-xs opacity-70">Orders</div>
+                              <div className="text-2xl font-semibold">{stats?.orders ?? "—"}</div>
+                            </div>
+
+                            <div className="rounded-xl border border-black/10 bg-white/70 p-3">
+                              <div className="text-xs opacity-70">Updated</div>
+                              <div className="text-xs break-words">{stats?.updatedAt ?? "—"}</div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {tab === "users" && (
+                    <div className="rounded-xl border border-black/10 bg-white/60 p-4 text-black">
+                      {!isAdmin ? (
+                        <div className="text-sm">Forbidden</div>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-semibold">Users (public.users)</div>
+                              <div className="text-xs opacity-70">
+                                Тук виждаш акаунтите, които са се записали в таблицата ти.
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={loadUsers}
+                              disabled={usersLoading}
+                              className="rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm font-medium hover:bg-white disabled:opacity-60"
+                            >
+                              {usersLoading ? "Loading..." : "Refresh"}
+                            </button>
+                          </div>
+
+                          {usersErr && (
+                            <div className="mt-3 rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                              {usersErr}
+                            </div>
+                          )}
+
+                          <div className="mt-4 overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="text-left border-b border-black/10">
+                                  <th className="py-2 pr-3">Email</th>
+                                  <th className="py-2 pr-3">Username</th>
+                                  <th className="py-2 pr-3">Role</th>
+                                  <th className="py-2 pr-3">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {usersList.map((u) => (
+                                  <tr key={u.id} className="border-b border-black/5">
+                                    <td className="py-2 pr-3">{u.email ?? "-"}</td>
+                                    <td className="py-2 pr-3">{u.username ?? "-"}</td>
+                                    <td className="py-2 pr-3">{u.role}</td>
+                                    <td className="py-2 pr-3">
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => setUserRole(u.id, "client")}
+                                          className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 hover:bg-white"
+                                        >
+                                          client
+                                        </button>
+                                        <button
+                                          onClick={() => setUserRole(u.id, "admin")}
+                                          className="rounded-lg border border-black/10 bg-white/70 px-2 py-1 hover:bg-white"
+                                        >
+                                          admin
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+
+                                {usersList.length === 0 && !usersLoading && (
+                                  <tr>
+                                    <td className="py-3 text-sm opacity-70" colSpan={4}>
+                                      Няма данни (или още няма регистрации в public.users).
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* mode switch */}
+                <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-black/10 bg-white/60 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setMode("login")}
+                    className={`rounded-xl px-3 py-2 text-sm font-medium transition text-black ${
+                      mode === "login" ? "bg-white shadow" : "hover:bg-white/60"
+                    }`}
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("register")}
+                    className={`rounded-xl px-3 py-2 text-sm font-medium transition text-black ${
+                      mode === "register" ? "bg-white shadow" : "hover:bg-white/60"
+                    }`}
+                  >
+                    Register
+                  </button>
+                </div>
+
+                <form onSubmit={mode === "login" ? handleLogin : handleRegister} className="mt-5 space-y-3">
+                  {mode === "register" && (
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-black">Username</label>
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full rounded-xl border border-black/10 bg-white/60 px-3 py-2.5 outline-none focus:bg-white text-black placeholder:text-black/40"
+                        placeholder="Username"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Email with 🙈/👁️ */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-black">Email</label>
+                    <div className="relative">
+                      <input
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full rounded-xl border border-black/10 bg-white/60 pl-3 pr-12 py-2.5 outline-none focus:bg-white text-black placeholder:text-black/40"
+                        placeholder="Email"
+                        type={emailVisible ? "text" : "password"}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEmailVisible((v) => !v)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-black/10 bg-white/70 px-2 py-1 text-sm hover:bg-white text-black"
+                        title={emailVisible ? "Unhash (show)" : "Hash (hide)"}
+                      >
+                        {emailVisible ? "👁️" : "🙈"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Password with 🙈/👁️ */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-black">Password</label>
+                    <div className="relative">
+                      <input
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full rounded-xl border border-black/10 bg-white/60 pl-3 pr-12 py-2.5 outline-none focus:bg-white text-black placeholder:text-black/40"
+                        placeholder="Password"
+                        type={passwordVisible ? "text" : "password"}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPasswordVisible((v) => !v)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border border-black/10 bg-white/70 px-2 py-1 text-sm hover:bg-white text-black"
+                        title={passwordVisible ? "Unhash (show)" : "Hash (hide)"}
+                      >
+                        {passwordVisible ? "👁️" : "🙈"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {err && (
+                    <div className="rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      {err}
+                    </div>
+                  )}
+
+                  <button
+                    disabled={loading}
+                    className="w-full rounded-xl border border-black/10 bg-white/70 px-4 py-2.5 font-semibold hover:bg-white disabled:opacity-60 text-black"
+                    type="submit"
+                  >
+                    {loading ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
+                  </button>
+
+                  {mode === "register" && (
+                    <p className="text-xs opacity-70 text-black">
+                      Ако email confirmation е включен, ще получиш линк за потвърждение.
+                    </p>
+                  )}
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
