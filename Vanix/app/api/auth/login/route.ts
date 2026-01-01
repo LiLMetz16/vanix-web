@@ -1,19 +1,11 @@
-// app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = (await req.json()) as {
-      email: string;
-      password: string;
-    };
+    const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Missing email or password" }, { status: 400 });
-    }
-
-    const supabase = createClient();
+    const supabase = await createClient(); // ✅ важно
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -21,12 +13,11 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // cookies are set by @supabase/ssr through server client
-    return NextResponse.json({ ok: true, userId: data.user?.id ?? null }, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json({ data }, { status: 200 });
+  } catch (e) {
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
