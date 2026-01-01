@@ -1,9 +1,15 @@
-// lib/supabase/server.ts
-import { createServerClient } from "@supabase/ssr";
+import "server-only";
 import { cookies } from "next/headers";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
-export function createClient() {
-  const cookieStore = cookies();
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: CookieOptions;
+};
+
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies(); // Next 15/16: cookies() е async
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,13 +19,13 @@ export function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // server components may not allow setting cookies
+            // Server Components може да блокират set; middleware/route handlers са OK
           }
         },
       },
