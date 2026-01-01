@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "postinstall": "prisma generate"
+    "postinstall": "node -e \"process.exit(process.env.NETLIFY ? 0 : 1)\" || prisma generate"
+
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
