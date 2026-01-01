@@ -57,10 +57,30 @@ export default function AuthCallbackPage() {
       const type = url.searchParams.get("type") as any;
 
       if (token && type) {
-        const { error } = await supabase.auth.verifyOtp({ token, type });
-        if (error) return setErr(error.message);
-        router.replace("/account");
-        return;
+        const code = searchParams.get("code");
+const token = searchParams.get("token");
+const type = searchParams.get("type");
+const email = searchParams.get("email");
+
+if (code) {
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) return setErr(error.message);
+  router.replace("/account");
+  return;
+}
+
+if (token && type) {
+  if (!email) return setErr("Missing email in verification link.");
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: type as any,
+  });
+  if (error) return setErr(error.message);
+  router.replace("/account");
+  return;
+}
+
       }
 
       // C) Implicit hash tokens
