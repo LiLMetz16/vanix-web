@@ -55,7 +55,7 @@ export default function HomePage() {
                   <span className="absolute left-0 -bottom-1 h-[2px] w-0 rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 transition-all duration-200 group-hover:w-full" />
                 </Link>
 
-                <Link href="/contacts" className="group relative">
+                <Link href="/contact" className="group relative">
                   <span className="transition-colors duration-200 group-hover:text-indigo-600">
                     Contact Us
                   </span>

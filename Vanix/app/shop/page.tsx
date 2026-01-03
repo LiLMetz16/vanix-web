@@ -8,13 +8,19 @@ type ProductCategory = "Website" | "App" | "Design" | "UI Kit" | "Other";
 
 type Product = {
   id: string;
+  slug: string; // product1, product2...
   title: string;
   subtitle: string;
+  description: string;
   priceEUR: number;
   category: ProductCategory;
   tags: string[];
-  image: string; // /public/...
+  image: string; // ONLY filename, e.g. "starterimage.png" (stored in /public/shop/)
   featured?: boolean;
+
+  deliverables: string[];
+  timeline: string;
+  faq: { q: string; a: string }[];
 };
 
 type CartItem = {
@@ -22,104 +28,126 @@ type CartItem = {
   qty: number;
 };
 
-const PRODUCTS: Product[] = [
+export const PRODUCTS: Product[] = [
   {
     id: "vanix-website-starter",
+    slug: "product1",
     title: "Website Starter",
     subtitle: "Next.js + Tailwind landing page (fast, clean, SEO-ready).",
+    description:
+      "A fast, modern landing page built with Next.js + Tailwind. Clean sections, strong CTA layout, and SEO-ready structure.",
     priceEUR: 149,
     category: "Website",
     tags: ["Next.js", "Tailwind", "SEO"],
-    image: "/shop/website-starter.jpg",
+    image: "starterimage.png",
     featured: true,
+    deliverables: ["Landing page UI", "Responsive layout", "SEO basics", "Setup notes"],
+    timeline: "2–3 days (typical)",
+    faq: [
+      { q: "Can you deploy it for me?", a: "Yes — we can deploy to Vercel/Netlify on request." },
+      { q: "Do I get the source code?", a: "Yes — source files + setup notes are included." },
+    ],
   },
   {
     id: "vanix-website-business",
+    slug: "product2",
     title: "Business Website",
-    subtitle:
-      "Multi-page website with sections, contact form, and CMS-ready structure.",
+    subtitle: "Multi-page website with sections, contact form, and CMS-ready structure.",
+    description:
+      "A multi-page website for a business: clear structure, contact section, and a scalable layout that can later be connected to a CMS.",
     priceEUR: 399,
     category: "Website",
     tags: ["Multi-page", "Branding", "Responsive"],
-    image: "/shop/website-business.jpg",
+    image: "buisness.png",
     featured: true,
+    deliverables: ["Multiple pages", "Responsive sections", "Contact form UI", "Scalable structure"],
+    timeline: "5–10 days (typical)",
+    faq: [
+      { q: "Is it CMS-ready?", a: "Yes — we structure it so it’s easy to connect a CMS later." },
+      { q: "Do you include copywriting?", a: "Not by default, but we can help with guidance." },
+    ],
   },
   {
     id: "vanix-ecommerce-ui",
+    slug: "product3",
     title: "E-commerce UI Pack",
-    subtitle:
-      "Reusable UI blocks for a modern shop (cart, filters, product cards).",
+    subtitle: "Reusable UI blocks for a modern shop (cart, filters, product cards).",
+    description:
+      "A reusable UI pack for e-commerce: product cards, filters, cart patterns, and clean layout blocks that you can plug into your store.",
     priceEUR: 79,
     category: "UI Kit",
     tags: ["UI", "Components", "Shop"],
-    image: "/shop/ecommerce-ui.jpg",
+    image: "e-commerce.png",
+    deliverables: ["UI components", "Cart patterns", "Filter patterns", "Layout blocks"],
+    timeline: "1–2 days (typical)",
+    faq: [
+      { q: "Does it include backend?", a: "No — this is UI only. We can integrate Supabase/Stripe later." },
+      { q: "Is it responsive?", a: "Yes." },
+    ],
   },
   {
     id: "vanix-app-dashboard",
+    slug: "product4",
     title: "Admin Dashboard",
-    subtitle:
-      "Dashboard layout with tables, charts placeholders, and responsive sidebar.",
+    subtitle: "Dashboard layout with tables, charts placeholders, and responsive sidebar.",
+    description:
+      "Admin dashboard UI: sidebar navigation, tables, and chart placeholders (ready for your real data).",
     priceEUR: 199,
     category: "App",
     tags: ["Dashboard", "Admin", "Layout"],
-    image: "/shop/app-dashboard.jpg",
+    image: "admindashboard.png",
+    deliverables: ["Dashboard layout", "Responsive sidebar", "Table UI", "Chart placeholders"],
+    timeline: "3–5 days (typical)",
+    faq: [
+      { q: "Do charts work?", a: "Placeholders by default — we can wire real data when you’re ready." },
+      { q: "Can you connect Supabase?", a: "Yes, on request." },
+    ],
   },
   {
     id: "vanix-logo-pack",
+    slug: "product5",
     title: "Logo + Brand Pack",
-    subtitle:
-      "Logo concepts + simple brand rules (colors, typography suggestions).",
+    subtitle: "Logo concepts + simple brand rules (colors, typography suggestions).",
+    description:
+      "Logo concepts plus simple brand rules: color direction and typography suggestions for consistent visuals.",
     priceEUR: 129,
     category: "Design",
     tags: ["Logo", "Brand", "Identity"],
-    image: "/shop/logo-pack.jpg",
+    image: "logo+brand.png",
+    deliverables: ["Logo concepts", "Color suggestions", "Typography direction", "Basic brand rules"],
+    timeline: "2–4 days (typical)",
+    faq: [
+      { q: "Do I get vector files?", a: "Yes (SVG/PNG), depending on the final direction." },
+      { q: "How many concepts?", a: "Typically 2–3 initial concepts." },
+    ],
   },
   {
     id: "vanix-ui-audit",
+    slug: "product6",
     title: "UI/UX Audit",
-    subtitle:
-      "Practical feedback list (visual hierarchy, spacing, usability, consistency).",
+    subtitle: "Practical feedback list (visual hierarchy, spacing, usability, consistency).",
+    description:
+      "A practical UI/UX audit with actionable feedback: hierarchy, spacing, usability issues, consistency, and quick wins.",
     priceEUR: 59,
     category: "Other",
     tags: ["Audit", "UX", "Checklist"],
-    image: "/shop/ui-audit.jpg",
+    image: "uiux.png",
+    deliverables: ["Actionable checklist", "Priority issues", "Quick wins", "Consistency notes"],
+    timeline: "1–2 days (typical)",
+    faq: [
+      { q: "Do you redesign too?", a: "We can — audit first, redesign as a follow-up." },
+      { q: "What do you need from me?", a: "Link to your site/app or screenshots." },
+    ],
   },
 ];
 
 const STORAGE_KEY = "vanix_cart_v1";
 
-/**
- * AUTH SYNC (works even if Account page uses Supabase localStorage keys)
- * We read from:
- * 1) your custom keys (if you store user there)
- * 2) Supabase keys like: sb-<project-ref>-auth-token
- */
-const USER_KEYS_TO_TRY = [
-  "vanix_user_v1",
-  "vanix_user",
-  "user",
-  "currentUser",
-  "loggedUser",
-] as const;
+const USER_KEYS_TO_TRY = ["vanix_user_v1", "vanix_user", "user", "currentUser", "loggedUser"] as const;
 
 type SessionUser = { username: string; email?: string; role?: "user" | "admin" };
 
-/**
- * ORDERS STATS
- * Expected storage (you can keep your own too; this is just for reading):
- * localStorage.setItem("vanix_orders_v1", JSON.stringify([{ createdAt: "2025-12-31T10:15:00Z" }, ...]))
- *
- * It will also try common alternatives:
- * - "orders"
- * - "orderHistory"
- * - "vanix_orders"
- */
-const ORDER_KEYS_TO_TRY = [
-  "vanix_orders_v1",
-  "vanix_orders",
-  "orders",
-  "orderHistory",
-] as const;
+const ORDER_KEYS_TO_TRY = ["vanix_orders_v1", "vanix_orders", "orders", "orderHistory"] as const;
 
 type OrderLike = { createdAt?: string; created_at?: string; date?: string; time?: string };
 
@@ -163,8 +191,7 @@ function pickUsername(obj: any): { username: string; email?: string; role?: "use
   const email = safeString(obj.email) || safeString(obj.mail);
 
   const roleRaw = safeString(obj.role).toLowerCase();
-  const role: "user" | "admin" | undefined =
-    roleRaw === "admin" ? "admin" : roleRaw === "user" ? "user" : undefined;
+  const role: "user" | "admin" | undefined = roleRaw === "admin" ? "admin" : roleRaw === "user" ? "user" : undefined;
 
   const finalUsername = username || (email ? usernameFromEmail(email) : "");
   if (!finalUsername) return null;
@@ -190,7 +217,6 @@ function tryParseUserFromRaw(raw: string | null): SessionUser | null {
       if (nested2) return nested2;
     }
 
-    // Supabase v2 auth token object: { user: { email, user_metadata: {...} } }
     if (parsed?.user && parsed.user?.user_metadata) {
       const meta = parsed.user.user_metadata;
       const fromMeta =
@@ -213,7 +239,6 @@ function tryParseUserFromRaw(raw: string | null): SessionUser | null {
     // ignore
   }
 
-  // Fallback ONLY if it's a clean plain username (avoid showing JSON strings)
   const s = String(raw).trim();
   const looksLikeJson = s.startsWith("{") || s.startsWith("[");
   if (looksLikeJson) return null;
@@ -233,7 +258,6 @@ function readUserFromStorage(): SessionUser | null {
     }
   }
 
-  // Supabase keys: sb-<...>-auth-token
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
@@ -308,25 +332,20 @@ function addMonths(d: Date, months: number) {
 }
 
 function isSameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 function buildSeries(orderDates: Date[], range: RangeKey) {
   const now = new Date();
   const today0 = startOfDay(now);
 
-  // buckets = points
   let points = 12;
   let from = today0;
   let step: "hour" | "day" | "week" | "month" = "day";
 
   if (range === "day") {
     points = 24;
-    from = addDays(today0, 0); // today
+    from = addDays(today0, 0);
     step = "hour";
   } else if (range === "week") {
     points = 7;
@@ -338,11 +357,11 @@ function buildSeries(orderDates: Date[], range: RangeKey) {
     step = "day";
   } else if (range === "3m") {
     points = 12;
-    from = addDays(today0, -(7 * 11)); // 12 weeks
+    from = addDays(today0, -(7 * 11));
     step = "week";
   } else if (range === "6m") {
     points = 12;
-    from = addDays(today0, -(14 * 11)); // 12 * 2 weeks approx
+    from = addDays(today0, -(14 * 11));
     step = "week";
   } else {
     points = 12;
@@ -350,7 +369,6 @@ function buildSeries(orderDates: Date[], range: RangeKey) {
     step = "month";
   }
 
-  // Prepare buckets
   const labels: string[] = [];
   const values = new Array(points).fill(0);
 
@@ -369,7 +387,6 @@ function buildSeries(orderDates: Date[], range: RangeKey) {
     }
   }
 
-  // Count orders into buckets
   for (const od of orderDates) {
     if (step === "hour") {
       if (!isSameDay(od, now)) continue;
@@ -392,7 +409,6 @@ function buildSeries(orderDates: Date[], range: RangeKey) {
       continue;
     }
 
-    // month
     const y = od.getFullYear();
     const m = od.getMonth();
     const fy = from.getFullYear();
@@ -423,6 +439,16 @@ function makeSparkPath(values: number[], w: number, h: number, pad: number) {
   return d;
 }
 
+/**
+ * IMPORTANT:
+ * We store ONLY the filename in PRODUCTS (e.g. "starterimage.png"),
+ * but Next/Image needs a path from /public.
+ * Your files must be in: /public/shop/<filename>
+ */
+function productImage(filename: string) {
+  return `/shop/${filename}`;
+}
+
 export default function ShopPage() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [adminStatsOpen, setAdminStatsOpen] = useState(false);
@@ -438,7 +464,6 @@ export default function ShopPage() {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [orders, setOrders] = useState<Date[]>([]);
 
-  // Load cart
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -450,7 +475,6 @@ export default function ShopPage() {
     }
   }, []);
 
-  // Persist cart
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
@@ -459,7 +483,6 @@ export default function ShopPage() {
     }
   }, [cart]);
 
-  // Auth + Orders sync: mount + focus + visibility + storage + small polling
   useEffect(() => {
     function syncAll() {
       setUser(readUserFromStorage());
@@ -505,7 +528,6 @@ export default function ShopPage() {
     setAdminStatsOpen(false);
   }
 
-  // CLOSE dropdown: ESC + click outside + scroll
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -565,7 +587,7 @@ export default function ShopPage() {
         break;
       case "featured":
       default:
-        list.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
+        list.sort((a, b) => Number(!!b.featured) - Number(!!a.featured) || a.title.localeCompare(b.title));
         break;
     }
 
@@ -618,10 +640,7 @@ export default function ShopPage() {
   const sparkW = 220;
   const sparkH = 60;
   const sparkPad = 6;
-  const sparkPath = useMemo(
-    () => makeSparkPath(series.values, sparkW, sparkH, sparkPad),
-    [series.values]
-  );
+  const sparkPath = useMemo(() => makeSparkPath(series.values, sparkW, sparkH, sparkPad), [series.values]);
   const totalOrdersInRange = useMemo(() => series.values.reduce((a, b) => a + b, 0), [series.values]);
 
   function RangeBtn({ k, label }: { k: RangeKey; label: string }) {
@@ -681,7 +700,6 @@ export default function ShopPage() {
                 </nav>
 
                 <div className="flex items-center gap-3">
-                  {/* Account dropdown */}
                   <div className="relative">
                     <button
                       onClick={(e) => {
@@ -724,7 +742,6 @@ export default function ShopPage() {
                               My Account
                             </Link>
 
-                            {/* Admin-only: Stats dropdown (button) */}
                             {isAdmin && (
                               <div className="border-t">
                                 <button
@@ -741,9 +758,7 @@ export default function ShopPage() {
                                       <div className="flex items-center justify-between gap-2">
                                         <div>
                                           <div className="text-xs text-gray-500">Orders</div>
-                                          <div className="text-sm font-semibold text-gray-900">
-                                            {totalOrdersInRange} total
-                                          </div>
+                                          <div className="text-sm font-semibold text-gray-900">{totalOrdersInRange} total</div>
                                         </div>
                                         <div className="text-xs text-gray-500 text-right">
                                           Range:{" "}
@@ -782,14 +797,6 @@ export default function ShopPage() {
                                         </div>
                                       </div>
 
-                                      <div className="mt-2 text-[11px] text-gray-600">
-                                        Reads from localStorage orders keys:{" "}
-                                        <span className="font-semibold text-gray-900">
-                                          {ORDER_KEYS_TO_TRY[0]}
-                                        </span>{" "}
-                                        (or alternatives).
-                                      </div>
-
                                       <div className="mt-2">
                                         <Link
                                           href="/admin/dashboard"
@@ -809,10 +816,7 @@ export default function ShopPage() {
                             )}
 
                             <div className="border-t">
-                              <button
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-900"
-                                onClick={logout}
-                              >
+                              <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-900" onClick={logout}>
                                 Log out
                               </button>
                             </div>
@@ -845,7 +849,6 @@ export default function ShopPage() {
                     )}
                   </div>
 
-                  {/* Cart */}
                   <button
                     onClick={() => {
                       setCartOpen(true);
@@ -868,7 +871,6 @@ export default function ShopPage() {
             </div>
           </div>
 
-          {/* Search + filters */}
           <div className="relative z-[0] mt-4 rounded-2xl bg-white/80 backdrop-blur shadow-lg border border-white/60 text-black">
             <div className="px-5 py-5">
               <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
@@ -909,9 +911,7 @@ export default function ShopPage() {
                   <button
                     onClick={() => setOnlyFeatured((v) => !v)}
                     className={`rounded-2xl px-4 py-3 text-sm border transition ${
-                      onlyFeatured
-                        ? "bg-black text-white border-black"
-                        : "bg-white/70 text-black border-white/70 hover:bg-white"
+                      onlyFeatured ? "bg-black text-white border-black" : "bg-white/70 text-black border-white/70 hover:bg-white"
                     }`}
                   >
                     Featured
@@ -946,18 +946,20 @@ export default function ShopPage() {
               key={p.id}
               className="rounded-2xl bg-white/80 backdrop-blur border border-white/60 shadow-lg overflow-hidden text-black"
             >
-              <div className="relative h-44 w-full">
+              <div className="relative w-full aspect-[16/9] overflow-hidden">
                 <Image
-                  src={p.image}
+                  src={productImage(p.image)}
                   alt={p.title}
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 33vw"
+                  quality={90}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-300 hover:scale-110"
+                  priority={!!p.featured}
                 />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0" />
+
                 {p.featured && (
-                  <div className="absolute top-3 left-3 rounded-full bg-black text-white text-xs px-3 py-1">
-                    Featured
-                  </div>
+                  <div className="absolute top-3 left-3 rounded-full bg-black text-white text-xs px-3 py-1">Featured</div>
                 )}
               </div>
 
@@ -975,10 +977,7 @@ export default function ShopPage() {
 
                 <div className="mt-3 flex flex-wrap gap-2">
                   {p.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="text-xs px-3 py-1 rounded-full bg-black/10 border border-black/15 text-black/80"
-                    >
+                    <span key={t} className="text-xs px-3 py-1 rounded-full bg-black/10 border border-black/15 text-black/80">
                       {t}
                     </span>
                   ))}
@@ -991,8 +990,9 @@ export default function ShopPage() {
                   >
                     Add to cart
                   </button>
+
                   <Link
-                    href={`/shop/${p.id}`}
+                    href={`/shop/${p.slug}`}
                     className="rounded-xl px-4 py-2 text-sm font-medium bg-white border border-black/10 text-black hover:bg-black/5 transition"
                   >
                     Details
@@ -1014,10 +1014,7 @@ export default function ShopPage() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Link
-                href="/contact"
-                className="rounded-xl px-5 py-3 text-sm font-medium bg-black text-white hover:bg-black/90 transition"
-              >
+              <Link href="/contact" className="rounded-xl px-5 py-3 text-sm font-medium bg-black text-white hover:bg-black/90 transition">
                 Contact
               </Link>
               <button
@@ -1031,7 +1028,6 @@ export default function ShopPage() {
         </section>
       </main>
 
-      {/* Cart Drawer */}
       <div className={`fixed inset-0 z-50 transition ${cartOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
         <div
           className={`absolute inset-0 bg-black/40 transition-opacity ${cartOpen ? "opacity-100" : "opacity-0"}`}
@@ -1050,10 +1046,7 @@ export default function ShopPage() {
                   <div className="text-lg font-semibold text-black">Your cart</div>
                   <div className="text-xs text-black/60">{cartCount} item(s)</div>
                 </div>
-                <button
-                  onClick={() => setCartOpen(false)}
-                  className="rounded-xl px-3 py-2 text-sm bg-black/5 text-black hover:bg-black/10 transition"
-                >
+                <button onClick={() => setCartOpen(false)} className="rounded-xl px-3 py-2 text-sm bg-black/5 text-black hover:bg-black/10 transition">
                   Close
                 </button>
               </div>
@@ -1061,15 +1054,20 @@ export default function ShopPage() {
 
             <div className="flex-1 overflow-auto p-5">
               {cartLines.length === 0 ? (
-                <div className="rounded-2xl border border-black/10 bg-black/5 p-5 text-sm text-black/70">
-                  Cart is empty. Add a product from the shop.
-                </div>
+                <div className="rounded-2xl border border-black/10 bg-black/5 p-5 text-sm text-black/70">Cart is empty. Add a product from the shop.</div>
               ) : (
                 <div className="space-y-3">
                   {cartLines.map(({ product, qty, lineTotal }) => (
                     <div key={product.id} className="rounded-2xl border border-black/10 p-4 flex gap-3">
                       <div className="relative h-16 w-16 rounded-xl overflow-hidden border border-black/10">
-                        <Image src={product.image} alt={product.title} fill className="object-cover" />
+                        <Image
+                          src={productImage(product.image)}
+                          alt={product.title}
+                          fill
+                          quality={80}
+                          sizes="64px"
+                          className="object-cover"
+                        />
                       </div>
 
                       <div className="flex-1">
@@ -1088,10 +1086,7 @@ export default function ShopPage() {
 
                         <div className="mt-3 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setQty(product.id, qty - 1)}
-                              className="h-9 w-9 rounded-xl bg-black text-white hover:bg-black/90 transition"
-                            >
+                            <button onClick={() => setQty(product.id, qty - 1)} className="h-9 w-9 rounded-xl bg-black text-white hover:bg-black/90 transition">
                               -
                             </button>
                             <input
@@ -1100,15 +1095,18 @@ export default function ShopPage() {
                               className="w-14 h-9 rounded-xl border border-black/10 text-black text-center outline-none"
                               inputMode="numeric"
                             />
-                            <button
-                              onClick={() => setQty(product.id, qty + 1)}
-                              className="h-9 w-9 rounded-xl bg-black text-white hover:bg-black/90 transition"
-                            >
+                            <button onClick={() => setQty(product.id, qty + 1)} className="h-9 w-9 rounded-xl bg-black text-white hover:bg-black/90 transition">
                               +
                             </button>
                           </div>
 
                           <div className="text-sm font-semibold text-black">{eur(lineTotal)}</div>
+                        </div>
+
+                        <div className="mt-3">
+                          <Link href={`/shop/${product.slug}`} className="text-xs underline text-black/70 hover:text-black">
+                            View details
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -1144,18 +1142,14 @@ export default function ShopPage() {
                 </button>
               </div>
 
-              <div className="mt-3 text-xs text-black/60">
-                Note: This is a digital products cart UI. Integrate Stripe/Supabase checkout when you are ready.
-              </div>
+              <div className="mt-3 text-xs text-black/60">Note: This is a digital products cart UI. Integrate Stripe/Supabase checkout when you are ready.</div>
             </div>
           </div>
         </aside>
       </div>
 
       <footer className="py-10">
-        <div className="max-w-6xl mx-auto px-6 text-center text-xs text-black/70">
-          © {new Date().getFullYear()} Vanix. All rights reserved.
-        </div>
+        <div className="max-w-6xl mx-auto px-6 text-center text-xs text-black/70">© {new Date().getFullYear()} Vanix. All rights reserved.</div>
       </footer>
     </div>
   );
