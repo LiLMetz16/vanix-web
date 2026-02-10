@@ -1,30 +1,5 @@
 "use client";
 
-<<<<<<< HEAD:Vanix/app/account/AccountClient.tsx
-import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { readUser } from "@/lib/authClient";
-import type { StoredUser } from "@/lib/types/auth";
-
-type Mode = "login" | "register";
-type Tab = "profile" | "orders" | "dashboard" | "users";
-
-type AdminUserRow = {
-  id: string;
-  email: string | null;
-  username: string | null;
-  role: "client" | "admin";
-};
-
-function mapSupabaseRegisterError(msg: string) {
-  const m = msg.toLowerCase();
-  if (m.includes("already registered") || m.includes("already exists")) return "Вече има акаунт с този email.";
-  if (m.includes("duplicate") || m.includes("unique constraint") || m.includes("already in use"))
-    return "Вече има акаунт с този email.";
-  return msg;
-}
-=======
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { readUser, signOut } from "@/lib/authClient";
@@ -46,103 +21,11 @@ type DashboardStats = {
   totalRevenue: number;
   recentOrders: Order[];
 };
->>>>>>> 1f766ad (update changes):vanix-web-complete/app/account/AccountClient.tsx
 
 export default function AccountClient() {
   const router = useRouter();
   const sp = useSearchParams();
 
-<<<<<<< HEAD:Vanix/app/account/AccountClient.tsx
-  // IMPORTANT: use the canonical browser client
-  const supabase = useMemo(() => createClient(), []);
-
-  const [mode, setMode] = useState<Mode>("login");
-  const [user, setUser] = useState<StoredUser | null>(null);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-
-  const [emailVisible, setEmailVisible] = useState(false);
-  const [passwordVisible, setPasswordVisible] = useState(false);
-
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  // admin stats
-  const [stats, setStats] = useState<{ users: number; orders: number; updatedAt: string } | null>(null);
-  const [statsErr, setStatsErr] = useState<string | null>(null);
-
-  // admin users
-  const [usersList, setUsersList] = useState<AdminUserRow[]>([]);
-  const [usersErr, setUsersErr] = useState<string | null>(null);
-  const [usersLoading, setUsersLoading] = useState(false);
-
-  const isAdmin = user?.role === "admin";
-
-  const tab = useMemo(() => {
-    const t = (sp.get("tab") ?? "profile").toLowerCase();
-    if (t === "orders") return "orders" as const;
-    if (t === "dashboard") return "dashboard" as const;
-    if (t === "users") return "users" as const;
-    return "profile" as const;
-  }, [sp]);
-
-  useEffect(() => {
-    readUser().then(setUser).catch(() => setUser(null));
-  }, []);
-
-  function setTab(next: Tab) {
-    router.replace(`/account?tab=${next}`);
-  }
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setErr(null);
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      const u = await readUser();
-      setUser(u);
-      router.push("/account");
-    } catch (e: any) {
-      setErr(e?.message ?? "Login failed.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleRegister(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setErr(null);
-
-    try {
-      const origin = window.location.origin;
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { username: name },
-          emailRedirectTo: `${origin}/auth/verify`,
-        },
-      });
-
-      if (error) {
-        setErr(mapSupabaseRegisterError(error.message));
-        return;
-      }
-
-      setMode("login");
-    } catch (e: any) {
-      setErr(mapSupabaseRegisterError(e?.message ?? "Register failed."));
-    } finally {
-      setLoading(false);
-=======
   const [user, setUser] = useState<StoredUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("profile");
@@ -1056,7 +939,6 @@ export default function AccountClient() {
                   <div className="text-center py-10 text-gray-600">Failed to load dashboard data</div>
                 )}
               </div>
->>>>>>> 1f766ad (update changes):vanix-web-complete/app/account/AccountClient.tsx
             )}
           </div>
         </div>
