@@ -1,0 +1,63 @@
+// Prisma schema for MySQL database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String?  // Optional - null for OAuth users
+  role      String   @default("user") // "user" or "admin"
+  
+  // OAuth fields
+  googleId  String?  @unique
+  provider  String?  // "google", "email", etc.
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  orders    Order[]
+  portfolioItems PortfolioItem[]
+  
+  @@map("users")
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  items     Json     // Array of {productId, qty, priceEUR}
+  totalEUR  Float
+  status    String   @default("pending") // pending, completed, cancelled
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("orders")
+}
+
+model PortfolioItem {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String   @db.Text
+  imageUrl    String
+  category    String
+  tags        Json     // Array of strings
+  featured    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("portfolio_items")
+}
