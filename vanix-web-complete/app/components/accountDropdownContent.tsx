@@ -12,44 +12,52 @@ export function AccountDropdownContent({ user, onLogout }: Props) {
   const isAdmin = user?.role === "admin";
 
   return (
-    <div className="w-72 p-3">
-      <div className="mb-3 rounded-xl border border-black/10 bg-white/70 p-3">
-        <div className="text-sm font-semibold">{user?.name ?? "Guest"}</div>
-        <div className="text-xs opacity-70">{user?.email ?? "Not signed in"}</div>
+    <div style={{ width: "280px", padding: "12px" }}>
+      {/* User info */}
+      <div
+        style={{
+          marginBottom: "12px",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border-subtle)",
+          background: "var(--surface-interactive)",
+          padding: "12px",
+        }}
+      >
+        <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--ink)" }}>
+          {user?.username ?? "Guest"}
+        </div>
+        <div style={{ fontSize: "0.8rem", color: "var(--slate)" }}>
+          {user?.email ?? "Not signed in"}
+        </div>
         {user?.role && (
-          <div className="mt-2 inline-flex rounded-full border border-black/10 bg-white/60 px-2 py-1 text-xs">
+          <span className="badge badge-brand" style={{ marginTop: "8px" }}>
             role: {user.role}
-          </div>
+          </span>
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* Actions */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
         {user ? (
           <>
-            <Link className="rounded-xl border border-black/10 bg-white/60 px-3 py-2 text-sm hover:bg-white" href="/account">
+            <Link href="/account" className="dropdown-item">
               My account
             </Link>
-
-            <Link className="rounded-xl border border-black/10 bg-white/60 px-3 py-2 text-sm hover:bg-white" href="/account?tab=orders">
+            <Link href="/account?tab=orders" className="dropdown-item">
               Orders
             </Link>
-
             {isAdmin && (
-              <Link className="rounded-xl border border-black/10 bg-white/60 px-3 py-2 text-sm hover:bg-white" href="/account?tab=dashboard">
+              <Link href="/account?tab=dashboard" className="dropdown-item">
                 Admin dashboard
               </Link>
             )}
-
-            <button
-              type="button"
-              onClick={onLogout}
-              className="rounded-xl border border-black/10 bg-white/60 px-3 py-2 text-left text-sm hover:bg-white"
-            >
+            <div className="dropdown-divider" />
+            <button type="button" onClick={onLogout} className="dropdown-item" style={{ color: "#ef4444" }}>
               Logout
             </button>
           </>
         ) : (
-          <Link className="rounded-xl border border-black/10 bg-white/60 px-3 py-2 text-sm hover:bg-white" href="/account">
+          <Link href="/account" className="dropdown-item">
             Login / Register
           </Link>
         )}
